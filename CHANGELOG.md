@@ -2,6 +2,7 @@
 
 ## Master (Unreleased)
 
+* Fix false positive in `RSpec/SingleArgumentMessageChain` cop when the single argument is a hash. ([@Darhazer][])
 * Add autocorrect support for `RSpec/LeadingSubject` cop. ([@Darhazer][])
 * Add `RSpec/ScatteredLet` cop. ([@Darhazer][])
 * Add `RSpec/IteratedExpectation` cop. ([@Darhazer][])

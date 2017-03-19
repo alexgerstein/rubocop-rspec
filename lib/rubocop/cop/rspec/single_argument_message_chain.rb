@@ -22,9 +22,13 @@ module RuboCop
           (send _ #{Matchers::MESSAGE_CHAIN.node_pattern_union} $...)
         PATTERN
 
+        def_node_matcher :hash?, '(hash ...)'
+
         def on_send(node)
           message_chain(node) do |(first, *remaining)|
             return if first.to_s.include?('.') || remaining.any?
+
+            return if hash?(first) && first.children.count != 1
 
             add_offense(node, :selector)
           end
@@ -33,10 +37,29 @@ module RuboCop
         def autocorrect(node)
           lambda do |corrector|
             corrector.replace(node.loc.selector, replacement(node.method_name))
+            message_chain(node) do |args|
+              arg = args.first
+              autocorrect_hash_arg(corrector, arg) if hash?(arg)
+            end
           end
         end
 
         private
+
+        def autocorrect_hash_arg(corrector, arg)
+          key, value = *arg.children.first
+
+          corrector.replace(arg.loc.expression, key_to_arg(key))
+          corrector.insert_after(arg.parent.loc.end, " { #{value.source} }")
+        end
+
+        def key_to_arg(key)
+          if key.sym_type?
+            ":#{key.source}"
+          else
+            key.source
+          end
+        end
 
         def replacement(method)
           method.equal?(:receive_message_chain) ? 'receive' : 'stub'
